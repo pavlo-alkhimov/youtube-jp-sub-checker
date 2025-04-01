@@ -40,12 +40,6 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-4. Set up your YouTube API key
-- Create a project in Google Cloud Console
-- Enable YouTube Data API
-- Create credentials (API key)
-- Add your API key to `config.py`
-
 ### Usage
 
 1. Make sure your virtual environment is activated
@@ -58,26 +52,20 @@ source venv/bin/activate
 
 2. Run the script:
 ```bash
-python main.py
+python jp.py <link-to-the-channel/videos, i.e. https://www.youtube.com/@HikakinTV>
 ```
 
-3. Enter the YouTube channel URL when prompted
-
-4. The script will display a list of videos that have manually created Japanese subtitles
-
-5. To deactivate the virtual environment when done:
-```bash
-deactivate
-```
+4. The script outputs a list of videos that have manually created Japanese subtitles
 
 ## Project Structure
 
 ```
 youtube-jp-subtitles-checker/
-├── main.py              # Main script
-├── config.py            # Configuration settings
-├── requirements.txt     # Project dependencies
-└── README.md
+├── jp.py            # Main script
+├─ helpers/           # Helper scripts, which were used to develop the main script
+│  ├── has-manually-written-japanese-subs.py  # Checks if a video has manually written Japanese subtitles
+│  └── list-of-videos.py  # Gets a list of videos from a YouTube channel
+└── README.md        # Project documentation
 ```
 
 ## Contributing
