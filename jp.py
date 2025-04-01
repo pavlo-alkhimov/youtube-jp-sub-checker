@@ -16,10 +16,16 @@ def get_videos_from_channel(channel_url):
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(channel_url, download=False)
-        if 'entries' not in info:
+        if info is None or 'entries' not in info:
             print("No videos found or invalid channel URL.", file=sys.stderr)
             sys.exit(1)
-        return info.get('title', 'unknown_channel'), [entry['url'] for entry in info.get('entries', [])]
+
+        entries = info.get('entries', [])
+        if not entries:
+            print("No videos found in channel.", file=sys.stderr)
+            sys.exit(1)
+
+        return info.get('title', 'unknown_channel'), [entry['url'] for entry in entries]
 
 def has_manual_japanese_subs(video_url):
     ydl_opts = {
@@ -32,8 +38,14 @@ def has_manual_japanese_subs(video_url):
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         try:
             info = ydl.extract_info(video_url, download=False)
+            if info is None:
+                return False
+            title = info.get('title', 'unknown_title')
             subs = info.get('subtitles', {})
-            return 'ja' in subs and 'url' in subs['ja'][0]
+            if 'ja' in subs and 'url' in subs['ja'][0]:
+                return title, True
+            else:
+                return title, False
         except yt_dlp.utils.DownloadError:
             return False
 
@@ -46,24 +58,30 @@ def main():
 
     try:
         channel_name, video_urls = get_videos_from_channel(channel_url)
-    except Exception as e:
+    except Exception:
         sys.exit(1)
 
     sanitized_name = sanitize_filename(channel_name)
+    # remove " - Videos" at the end of the sanitized_name
+    sanitized_name = sanitized_name[:-9] if sanitized_name.endswith(" - Videos") else sanitized_name
+    channel_name = channel_name[:-9] if channel_name.endswith(" - Videos") else channel_name
     output_file = f"{sanitized_name}.txt"
 
-    print(f"Searching on {channel_name} for videos with manually written japanese subs and saving found URLs to {output_file}")
+    print(f"Searching on \"{channel_name}\" channel for manually written japanese subs and saving found URLs to {output_file}")
 
     console = Console()
+    found = 0
+    title = ""
 
     with open(output_file, "w") as f:
-        with tqdm(total=len(video_urls), desc="Processing URLs", ncols=120, unit="url") as pbar:
+        with tqdm(total=len(video_urls), desc="Processing URLs", ncols=70, unit="url") as pbar:
             for url in video_urls:
-                console.print(f" [cyan]Checking:[/cyan] {url}", end="\r")
-                
-                if has_manual_japanese_subs(url):
-                    console.print(f"[bold magenta]✔ Found Manual JP Subs:[/bold magenta] {url}", end="\r")
-                    f.write(url + "\n")
+                console.print(f" Found: [bold magenta]{found}[/bold magenta], checking [yellow]{url}[/yellow]  ", end="\r")
+
+                title, has_subs = has_manual_japanese_subs(url)
+                if has_subs:
+                    f.write(url + " " + title + "\n")
+                    found += 1
 
                 pbar.update(1)  # ✅ Keeps the progress bar moving
 

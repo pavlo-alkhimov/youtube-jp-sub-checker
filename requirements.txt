@@ -1,0 +1,3 @@
+tqdm
+rich
+yt_dlp
