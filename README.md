@@ -14,7 +14,6 @@ A tool that checks YouTube channels for videos with manually created Japanese su
 ### Prerequisites
 
 - Python 3.x
-- YouTube Data API key
 
 ### Installation
 
